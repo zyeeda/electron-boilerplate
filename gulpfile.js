@@ -35,7 +35,7 @@ var assetsPaths = [
   './app/src/*.gif',
   './app/src/**/*.gif'
 ];
-var indexPath = ['./app/index.js'];
+var indexPath = ['./app/main.js'];
 
 // 测试文件路径
 var testPaths = [
@@ -125,7 +125,7 @@ gulp.task('build-test', function() {
 
 // 复制 app 相关配置文件
 gulp.task('copy-config', function() {
-  return gulp.src(['./app/index.html', './app/main.js', './app/package.json'])
+  return gulp.src(['./app/index.html', './app/bootstrap.js', './app/package.json'])
     .pipe(gulp.dest('./build'));
 });
 
@@ -135,13 +135,13 @@ gulp.task('build', ['copy-config', 'build-index', 'build-src', 'build-test']);
 
 // 复制 electron 配置文件
 gulp.task('copy-electron', function() {
-  return gulp.src(['./build/index.html', './build/main.js', './build/package.json'])
+  return gulp.src(['./build/index.html', './build/bootstrap.js', './build/package.json'])
     .pipe(gulp.dest('./dist'));
 });
 
 // 打包
 gulp.task('package', ['copy-electron', 'build'], function() {
-  return gulp.src('./build/index.js')
+  return gulp.src('./build/main.js')
     .pipe(webpack({
         output: {
             filename: 'bundle.js',

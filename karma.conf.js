@@ -4,7 +4,7 @@ module.exports = function(config) {
   config.set({
     basePath: '',
     // frameworks: ['jasmine', 'browserify'],
-    frameworks: ['jasmine'],
+    frameworks: ['jasmine-jquery', 'jasmine'],
     files: [
       'build/__tests__/**/*.js'
     ],
@@ -12,7 +12,7 @@ module.exports = function(config) {
     ],
     preprocessors: {
       // 'build/__tests__/**/*.js': ['browserify']
-      'build/__tests__/**/*.js': ['webpack']
+      'build/__tests__/**/*.js': ['jasmine-jquery', 'webpack']
     },
     // browserify: {
     //   transform: ['istanbulify'],
@@ -45,6 +45,7 @@ module.exports = function(config) {
       dir : 'coverage/'
     },
     plugins: [
+      require("karma-jasmine-jquery"),
       require("karma-chrome-launcher"),
       require("karma-coverage"),
       require("karma-electron-launcher"),

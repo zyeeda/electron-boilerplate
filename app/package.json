@@ -1,6 +1,6 @@
 {
-  "name": "electron",
+  "name": "electron-boilerplate",
   "version": "0.0.1",
   "description": "",
-  "main": "main.js"
+  "main": "bootstrap.js"
 }
