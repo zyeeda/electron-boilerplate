@@ -3,31 +3,32 @@ var webpack = require("webpack");
 module.exports = function(config) {
   config.set({
     basePath: '',
-    // frameworks: ['jasmine', 'browserify'],
     frameworks: ['jasmine-jquery', 'jasmine'],
     files: [
-      'build/__tests__/**/*.js'
+      './app/__tests__/**/*'
     ],
     exclude: [
+      './node_modules'
     ],
     preprocessors: {
-      // 'build/__tests__/**/*.js': ['browserify']
-      'build/__tests__/**/*.js': ['jasmine-jquery', 'webpack']
+      './app/__tests__/**/*': ['jasmine-jquery', 'webpack']
     },
-    // browserify: {
-    //   transform: ['istanbulify'],
-    //   extensions: ['.js'],
-    //   debug: true,
-    //   bundleDelay: 1000,  // WAR for karma-browserify race condition
-    // },
     webpack: {
       module: {
           loaders: [
             {test: /\.css$/, loader: 'style-loader!css-loader'},
             {test: /\.scss$/, loader: 'style-loader!css-loader!sass-loader'},
             {test: /\.(png|jpg|jpeg|gif)$/, loader: 'url-loader?limit=8192'},
-            { test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: "url-loader?limit=10000&minetype=application/font-woff" },
-            { test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: "file-loader" }
+            {test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: "url-loader?limit=10000&minetype=application/font-woff" },
+            {test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: "file-loader" },
+            {
+              test: /\.(jsx)$/, 
+              loaders: [
+                'jsx?harmony&stripTypes', 
+                'flowcheck'
+              ],
+              exclude: /node_modules/
+            }
           ]
         }
     }, 

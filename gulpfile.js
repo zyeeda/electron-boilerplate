@@ -48,6 +48,7 @@ var testPaths = [
 // 所有文件路径
 var allPaths = jsPaths.concat(jsxPaths).concat(indexPath).concat(testPaths);
 
+
 // 编译 js 程序文件
 gulp.task('build-src-js', function() {
   return gulp.src(jsPaths)
@@ -116,10 +117,8 @@ gulp.task('build-test', function() {
         beep: true,
         abort: false
     }))
-    .pipe(react({ stripTypes: true })) // Strip Flow type annotations before compiling
-    .pipe(babel({
-        // blacklist: ['strict']
-    }))
+    .pipe(react())
+    .pipe(babel())
     .pipe(gulp.dest('./build/__tests__'));
 });
 
@@ -135,24 +134,34 @@ gulp.task('build', ['copy-config', 'build-index', 'build-src', 'build-test']);
 
 // 复制 electron 配置文件
 gulp.task('copy-electron', function() {
-  return gulp.src(['./build/index.html', './build/bootstrap.js', './build/package.json'])
+  // return gulp.src(['./build/index.html', './build/bootstrap.js', './build/package.json'])
+  return gulp.src(['./app/index.html', './app/bootstrap.js', './app/package.json'])
     .pipe(gulp.dest('./dist'));
 });
 
 // 打包
-gulp.task('package', ['copy-electron', 'build'], function() {
-  return gulp.src('./build/main.js')
+// gulp.task('package', ['copy-electron', 'build'], function() {
+gulp.task('package', ['copy-electron'], function() {
+  return gulp.src('./app/main.js')
     .pipe(webpack({
         output: {
-            filename: 'bundle.js',
+            filename: 'bundle.js'
         },
         module: {
             loaders: [
               {test: /\.css$/, loader: 'style-loader!css-loader'},
               {test: /\.scss$/, loader: 'style-loader!css-loader!sass-loader'},
               {test: /\.(png|jpg|jpeg|gif)$/, loader: 'url-loader?limit=8192'},
-              { test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: "url-loader?limit=10000&minetype=application/font-woff" },
-              { test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: "file-loader" }
+              {test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'url-loader?limit=10000&minetype=application/font-woff' },
+              {test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'file-loader' },
+              {
+                test: /\.(js|jsx)$/, 
+                loaders: [
+                  'jsx?harmony&stripTypes', 
+                  'flowcheck'
+                ],
+                exclude: /node_modules/
+              }
             ]
           }
     }))
@@ -176,7 +185,13 @@ gulp.task( 'watch-test', [], function(){
     gulp.watch(testPaths, [ 'build-test', 'package'] );
 });
 
-gulp.task( 'watch', ['build', 'package', 'watch-src','watch-src-assets', 'watch-index', 'watch-test']);
+gulp.task( 'watch-source', [], function(){
+    gulp.watch('./app/**/*', ['package'] );
+});
+
+// gulp.task( 'watch', ['build', 'package', 'watch-src','watch-src-assets', 'watch-index', 'watch-test']);
+gulp.task( 'watch', ['package', 'watch-source']);
+
 
 // 运行测试 --无法输出日志信息
 // gulp.task('test', function (cb) {
