@@ -1,3 +1,4 @@
+/* test source map */
 var React = require('react');
 global.jQuery = require('jquery');
 require('bootstrap');

@@ -1,153 +1,33 @@
 var gulp      = require('gulp');
-var react     = require('gulp-react');
-var flow      = require('gulp-flowtype');
-var babel     = require('gulp-babel');
 var watch     = require('gulp-watch');
-var sass      = require('gulp-sass');
 var karma     = require('gulp-karma');
 var childExec = require('child_process').exec;
 var webpack   = require('gulp-webpack');
 
-// js 程序文件路径
-var jsPaths = [
-    './app/src/**/*.js',
-    './app/src/*.js'
-];
-
-// jsx 程序文件路径
-var jsxPaths = [
-    './app/src/**/*.jsx',
-    './app/src/*.jsx'
-];
-
-// assets 程序文件路径
-var assetsPaths = [
-  './app/src/*.scss',
-  './app/src/**/*.scss',
-  './app/src/*.css',
-  './app/src/**/*.css',
-  './app/src/*.jpg',
-  './app/src/**/*.jpg',
-  './app/src/*.png',
-  './app/src/**/*.png',
-  './app/src/*.jpeg',
-  './app/src/**/*.jpeg',
-  './app/src/*.gif',
-  './app/src/**/*.gif'
-];
-var indexPath = ['./app/main.js'];
-
-// 测试文件路径
-var testPaths = [
-    './app/__tests__/**/*.js',
-    './app/__tests__/**/*.jsx',
-    './app/__tests__/*.js',
-    './app/__tests__/*.jsx'
-];
-
-// 所有文件路径
-var allPaths = jsPaths.concat(jsxPaths).concat(indexPath).concat(testPaths);
-
-
-// 编译 js 程序文件
-gulp.task('build-src-js', function() {
-  return gulp.src(jsPaths)
-    .pipe(flow({
-        all: false,
-        weak: false,
-        declarations: './declarations',
-        killFlow: false,
-        beep: true,
-        abort: false
-    }))
-    .pipe(babel())
-    .pipe(gulp.dest('./build/src'));
-});
-
-// 编译 jsx 程序文件
-gulp.task('build-src-jsx', function() {
-  return gulp.src(jsxPaths)
-    .pipe(flow({
-        all: false,
-        weak: false,
-        declarations: './declarations',
-        killFlow: false,
-        beep: true,
-        abort: false
-    }))
-    .pipe(react({ stripTypes: true })) // Strip Flow type annotations before compiling
-    .pipe(babel())
-    .pipe(gulp.dest('./build/src'));
-});
-
-// 编译 jsx 程序文件
-gulp.task('copy-src-assets', function() {
-  return gulp.src(assetsPaths)
-    .pipe(gulp.dest('./build/src'));
-});
-// 编译 src
-gulp.task('build-src', ['build-src-js', 'build-src-jsx', 'copy-src-assets']);
-
-// index.js 与 src 下的文件一起编译，index.js 会被放到 src下，所以此处需要独立编译
-gulp.task('build-index', function() {
-  return gulp.src(indexPath)
-    .pipe(flow({
-        all: false,
-        weak: false,
-        declarations: './declarations',
-        killFlow: false,
-        beep: true,
-        abort: false
-    }))
-    .pipe(react({ stripTypes: true })) // Strip Flow type annotations before compiling
-    .pipe(babel({
-        // blacklist: ['strict']
-    }))
-    .pipe(gulp.dest('./build'));
-});
-
-// 编译测试文件
-gulp.task('build-test', function() {
-  return gulp.src(testPaths)
-    .pipe(flow({
-        all: false,
-        weak: false,
-        declarations: './declarations',
-        killFlow: false,
-        beep: true,
-        abort: false
-    }))
-    .pipe(react())
-    .pipe(babel())
-    .pipe(gulp.dest('./build/__tests__'));
-});
-
-// 复制 app 相关配置文件
+// copy config
 gulp.task('copy-config', function() {
-  return gulp.src(['./app/index.html', './app/bootstrap.js', './app/package.json'])
-    .pipe(gulp.dest('./build'));
-});
-
-// 编译所有文件
-gulp.task('build', ['copy-config', 'build-index', 'build-src', 'build-test']);
-
-
-// 复制 electron 配置文件
-gulp.task('copy-electron', function() {
-  // return gulp.src(['./build/index.html', './build/bootstrap.js', './build/package.json'])
   return gulp.src(['./app/index.html', './app/bootstrap.js', './app/package.json'])
     .pipe(gulp.dest('./dist'));
 });
 
 // 打包
-// gulp.task('package', ['copy-electron', 'build'], function() {
-gulp.task('package', ['copy-electron'], function() {
+gulp.task('package', ['copy-config'], function() {
   return gulp.src('./app/main.js')
     .pipe(webpack({
         output: {
-            filename: 'bundle.js'
+            filename: 'bundle.js',
+            sourceMapFilename: 'map.js',
+            eval: true,
+            devtool: 'source-map'
         },
         module: {
+            preLoaders: [
+              {
+                test: /\.(js|jsx)$/,
+                loader: 'source-map-loader',
+                exclude: /node_modules/
+              }
+            ],
             loaders: [
               {test: /\.css$/, loader: 'style-loader!css-loader'},
               {test: /\.scss$/, loader: 'style-loader!css-loader!sass-loader'},
@@ -155,7 +35,7 @@ gulp.task('package', ['copy-electron'], function() {
               {test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'url-loader?limit=10000&minetype=application/font-woff' },
               {test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'file-loader' },
               {
-                test: /\.(js|jsx)$/, 
+                test: /\.(js|jsx)$/,
                 loaders: [
                   'jsx?harmony&stripTypes', 
                   'flowcheck'
@@ -168,28 +48,10 @@ gulp.task('package', ['copy-electron'], function() {
     .pipe(gulp.dest('./dist'));
 });
 
-gulp.task( 'watch-src', [], function(){
-    gulp.watch(jsPaths, [ 'build-src-js', 'package'] );
-    gulp.watch(jsxPaths, [ 'build-src-jsx', 'package'] );
-});
-
-gulp.task( 'watch-src-assets', [], function(){
-    gulp.watch(assetsPaths, [ 'copy-src-assets', 'package'] );
-});
-
-gulp.task( 'watch-index', [], function(){
-    gulp.watch(indexPath, [ 'build-index', 'package'] );
-});
-
-gulp.task( 'watch-test', [], function(){
-    gulp.watch(testPaths, [ 'build-test', 'package'] );
-});
-
 gulp.task( 'watch-source', [], function(){
     gulp.watch('./app/**/*', ['package'] );
 });
 
-// gulp.task( 'watch', ['build', 'package', 'watch-src','watch-src-assets', 'watch-index', 'watch-test']);
 gulp.task( 'watch', ['package', 'watch-source']);
 
 
